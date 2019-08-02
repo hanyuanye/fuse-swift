@@ -42,9 +42,9 @@ public class Fuse {
         index: Int,
         score: Double,
         results: [(
-            key: String,
-            score: Double,
-            ranges: [CountableClosedRange<Int>]
+        key: String,
+        score: Double,
+        ranges: [CountableClosedRange<Int>]
         )]
     )
     
@@ -129,7 +129,7 @@ public class Fuse {
             
         } else {
             let result = _search(pattern, in: aString)
-
+            
             //If the averaged score is 1 then there were no matches so return nil. Otherwise return the average result
             return result.score == 1 ? nil : result
             
@@ -224,7 +224,7 @@ public class Fuse {
             if start > finish {
                 continue
             }
-
+            
             for j in (start...finish).reversed() {
                 let currentLocation = j - 1
                 
@@ -259,7 +259,7 @@ public class Fuse {
                         // Indeed it is
                         threshold = score
                         bestLocation = currentLocation
-
+                        
                         guard let bestLocation = bestLocation else {
                             break
                         }
@@ -357,7 +357,7 @@ extension Fuse {
                 group.leave()
             }
         }
-    
+        
         group.notify(queue: self.searchQueue) {
             let sorted = items.sorted { $0.score < $1.score }
             DispatchQueue.main.async {
@@ -432,16 +432,20 @@ extension Fuse {
                     
                     propertyResults.append((key: property.name, score: score, ranges: result.ranges))
                 }
-                
-                else if let value = unretainedValue as? [String],
-                    let result = self.search(pattern, in: value) {
+                    
+                else if let value = unretainedValue as? [String] {
+                    let results = self.search(text, in: value)
                     let weight = property.weight == 1 ? 1 : 1 - property.weight
-                    let score = (result.score == 0 && weight == 1 ? 0.001 : result.score) * weight
+                    var score: Double = 0
+                    results.forEach { result in
+                        score += (result.score == 0 && weight == 1 ? 0.001 : result.score) * weight
+                    }
+                    
                     totalScore += score
                     
                     scores.append(score)
                     
-                    propertyResults.append((key: property.name, score: score, ranges: result.ranges))
+                    propertyResults.append((key: property.name, score: score, ranges: results.flatMap { $0.ranges }))
                 }
             }
             
