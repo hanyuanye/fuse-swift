@@ -422,7 +422,7 @@ extension Fuse {
                 
                 let unretainedValue = object.perform(selector).takeUnretainedValue()
                 
-                if let unretainedValue = value as? String,
+                if let value = unretainedValue as? String,
                     let result = self.search(pattern, in: value) {
                     let weight = property.weight == 1 ? 1 : 1 - property.weight
                     let score = (result.score == 0 && weight == 1 ? 0.001 : result.score) * weight
@@ -433,7 +433,7 @@ extension Fuse {
                     propertyResults.append((key: property.name, score: score, ranges: result.ranges))
                 }
                 
-                else if let unretainedValue = value as? [String],
+                else if let value = unretainedValue as? [String],
                     let result = self.search(pattern, in: value) {
                     let weight = property.weight == 1 ? 1 : 1 - property.weight
                     let score = (result.score == 0 && weight == 1 ? 0.001 : result.score) * weight
