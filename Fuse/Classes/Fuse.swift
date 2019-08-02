@@ -420,11 +420,21 @@ extension Fuse {
                     return
                 }
                 
-                guard let value = object.perform(selector).takeUnretainedValue() as? String else {
-                    return
+                let unretainedValue = object.perform(selector).takeUnretainedValue()
+                
+                if let unretainedValue = value as? String,
+                    let result = self.search(pattern, in: value) {
+                    let weight = property.weight == 1 ? 1 : 1 - property.weight
+                    let score = (result.score == 0 && weight == 1 ? 0.001 : result.score) * weight
+                    totalScore += score
+                    
+                    scores.append(score)
+                    
+                    propertyResults.append((key: property.name, score: score, ranges: result.ranges))
                 }
                 
-                if let result = self.search(pattern, in: value) {
+                else if let unretainedValue = value as? [String],
+                    let result = self.search(pattern, in: value) {
                     let weight = property.weight == 1 ? 1 : 1 - property.weight
                     let score = (result.score == 0 && weight == 1 ? 0.001 : result.score) * weight
                     totalScore += score
